@@ -141,7 +141,7 @@ namespace NRedi2Read.Services
 
             var schema = new Schema();
             schema.AddTagField("Email");            
-            var options = new Client.ConfiguredIndexOptions(new Client.IndexDefinition(prefixes: new[] { "User:" }));
+            var options = new Client.ConfiguredIndexOptions(new Client.IndexDefinition(prefixes: new[] { "User:" }, language: "chinese"));
             _searchClient.CreateIndex(schema, options);
         }
 

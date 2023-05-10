@@ -62,7 +62,7 @@ namespace NRedi2Read.Services
         /// <param name="book"></param>
         /// <returns></returns>
         public async Task<Book> Create(Book book)
-        {            
+        {
             _db.HashSet(BookKey(book.Id), book.AsHashEntries().ToArray());
             return await Get(book.Id);
         }
@@ -73,7 +73,7 @@ namespace NRedi2Read.Services
         /// <param name="ids"></param>
         /// <returns></returns>
         public async Task<IEnumerable<string>> GetBulk(IEnumerable<string> ids)
-        {            
+        {
             var tasks = new List<Task<RedisValue>>();
             foreach(var id in ids)
             {
@@ -92,7 +92,7 @@ namespace NRedi2Read.Services
         /// <returns></returns>
         public async Task<IEnumerable<Book>> Search(string query, string sortBy, string direction)
         {
-            var q = new Query(query);
+            var q = new Query(query).SetLanguage("chinese").SummarizeFields().HighlightFields();
             q.SortBy = sortBy;
             q.SortAscending = direction == "ASC";
             var result = await _searchClient.SearchAsync(q);
@@ -106,13 +106,17 @@ namespace NRedi2Read.Services
         /// <param name="page"></param>
         /// <param name="pageSize"></param>
         /// <returns></returns>
-        public async Task<IList<Book>> PaginateBooks(string query, int page, string sortBy="title", string direction="ASC", int pageSize = 10)
+        public async Task<IList<Book>> PaginateBooks(string query, int page, string sortBy = "title", string direction = "ASC", int pageSize = 10)
         {
-            var q = new Query(query);
+            Console.WriteLine("＝＝＝＝＝＝＝＝");
+            Console.WriteLine($"搜尋字串: {query}");
+            var q = new Query(query).SetLanguage("chinese").SummarizeFields().HighlightFields();
             q.SortBy = sortBy;
             q.SortAscending = direction == "ASC";
             q.Limit(page * pageSize, pageSize);
             var results = await _searchClient.SearchAsync(q);
+            Console.WriteLine($"Total results: {results.TotalResults}");
+            Console.WriteLine("＝＝＝＝＝＝＝＝");
             return results.AsList<Book>();
         }
 
@@ -146,12 +150,13 @@ namespace NRedi2Read.Services
             schema.AddTextField("authors.[4]");
             schema.AddTextField("authors.[5]");
             schema.AddTextField("authors.[7]");
+
             var options = new Client.ConfiguredIndexOptions(
-                new Client.IndexDefinition( prefixes: new [] { "Book:" } )
+                new Client.IndexDefinition(prefixes: new[] { "Book:" }, language: "chinese")
             );
             await _searchClient.CreateIndexAsync(schema, options);
         }
-        
+
         /// <summary>
         /// generates a redis key for a book of a given id
         /// </summary>

@@ -155,7 +155,7 @@ namespace NRedi2Read.Services
             var schema = new Schema();
             schema.AddTagField("UserId");
             schema.AddTagField("Closed");
-            var options = new Client.ConfiguredIndexOptions(new Client.IndexDefinition(prefixes: new[] { "Cart:" }));
+            var options = new Client.ConfiguredIndexOptions(new Client.IndexDefinition(prefixes: new[] { "Cart:" }, language: "chinese"));
             _searchClient.CreateIndex(schema, options);
         }
 
