@@ -92,7 +92,7 @@ namespace NRedi2Read.Services
         /// <returns></returns>
         public async Task<IEnumerable<Book>> Search(string query, string sortBy, string direction)
         {
-            var q = new Query(query).SetLanguage("chinese").SummarizeFields().HighlightFields();
+            var q = new Query(query).SetLanguage("chinese");
             q.SortBy = sortBy;
             q.SortAscending = direction == "ASC";
             var result = await _searchClient.SearchAsync(q);
@@ -110,7 +110,7 @@ namespace NRedi2Read.Services
         {
             Console.WriteLine("＝＝＝＝＝＝＝＝");
             Console.WriteLine($"搜尋字串: {query}");
-            var q = new Query(query).SetLanguage("chinese").SummarizeFields().HighlightFields();
+            var q = new Query(query).SetLanguage("chinese");
             q.SortBy = sortBy;
             q.SortAscending = direction == "ASC";
             q.Limit(page * pageSize, pageSize);
@@ -129,7 +129,7 @@ namespace NRedi2Read.Services
             // drop the index, if it doesn't exists, that's fine
             try
             {
-                await _db.ExecuteAsync("FT.DROPINDEX", "books-idx");
+                await _db.ExecuteAsync("FT.DROPINDEX", BOOK_INDEX_NAME);
             }
             catch(Exception)
             {
@@ -155,6 +155,8 @@ namespace NRedi2Read.Services
                 new Client.IndexDefinition(prefixes: new[] { "Book:" }, language: "chinese")
             );
             await _searchClient.CreateIndexAsync(schema, options);
+
+            RedisResult result = _db.Execute("FT.SYNUPDATE", BOOK_INDEX_NAME, "group1", "小時", "精通");
         }
 
         /// <summary>
